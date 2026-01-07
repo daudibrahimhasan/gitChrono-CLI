@@ -1,0 +1,32 @@
+{
+  "name": "gitchrono",
+  "version": "1.0.0",
+  "description": "Calculate how much time you've spent coding based on your GitHub repositories",
+  "main": "dist/index.js",
+  "bin": {
+    "gitchrono": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "keywords": ["github", "cli", "code-stats", "time-tracking", "developer-tools"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "chalk": "^5.3.0",
+    "cli-progress": "^3.12.0",
+    "commander": "^12.0.0",
+    "dotenv": "^16.3.1",
+    "ora": "^8.0.1"
+  },
+  "devDependencies": {
+    "@types/cli-progress": "^3.11.5",
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.0"
+  },
+  "type": "module"
+}
