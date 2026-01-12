@@ -26,7 +26,13 @@ It’s designed to be:
 
 ## 📦 Installation
 
-### Clone and run locally
+### Install via npm (Recommended)
+
+```bash
+npm install -g gitchrono
+```
+
+### Run locally or from source
 
 ```bash
 git clone https://github.com/daudibrahimhasan/gitChrono.git
@@ -34,12 +40,6 @@ cd gitChrono/cli
 npm install
 npm run build
 npm link
-```
-
-### Install from npm
-
-```bash
-npm install -g gitchrono
 ```
 
 ---
@@ -53,12 +53,14 @@ npm install -g gitchrono
 2. **Run the analysis**
 
    Using environment variable (recommended):
+
    ```bash
    export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    gitchrono analyze
    ```
 
    Or pass token directly:
+
    ```bash
    gitchrono analyze --token ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    ```
@@ -84,16 +86,16 @@ generated with gitChrono • built by @daudibrahimhasan
 
 ## CLI Options
 
-| Flag                    | Description                                  |
-|-------------------------|----------------------------------------------|
-| `--token <token>`       | GitHub Personal Access Token                 |
-| `--user <username>`     | Analyze a specific user's repositories       |
-| `--include-forks`       | Include forked repositories                  |
-| `--include-archived`    | Include archived repositories                |
-| `--top <n>`             | Analyze only the top N most recently updated repositories |
-| `--output <format>`     | `table`, `json`, or `markdown`               |
-| `--readme`              | Generate README-friendly markdown            |
-| `--output-file <path>`  | Save output to a file                        |
+| Flag                   | Description                                               |
+| ---------------------- | --------------------------------------------------------- |
+| `--token <token>`      | GitHub Personal Access Token                              |
+| `--user <username>`    | Analyze a specific user's repositories                    |
+| `--include-forks`      | Include forked repositories                               |
+| `--include-archived`   | Include archived repositories                             |
+| `--top <n>`            | Analyze only the top N most recently updated repositories |
+| `--output <format>`    | `table`, `json`, or `markdown`                            |
+| `--readme`             | Generate README-friendly markdown                         |
+| `--output-file <path>` | Save output to a file                                     |
 
 ---
 
@@ -106,8 +108,8 @@ GitChrono keeps the logic **simple and transparent**:
 3. Converts bytes → estimated lines of code
 4. Applies language-specific **complexity multipliers**:
    - C / C++ → ×2.0
-   - Python  → ×1.0
-   - HTML    → ×0.5
+   - Python → ×1.0
+   - HTML → ×0.5
    - … (and more — easy to change)
 5. Estimates time using ~30 weighted LOC per productive coding day
 
@@ -156,4 +158,7 @@ Pull requests, ideas, and forks are very welcome!
 ## 📄 License
 
 MIT © [**@daudibrahimhasan**](https://github.com/daudibrahimhasan)
+
+```
+
 ```

@@ -25,6 +25,12 @@ It’s designed to be:
 
 ## 📦 Installation
 
+### Global install (Recommended)
+
+```bash
+npm install -g gitchrono
+```
+
 ### Clone and run locally
 
 ```bash

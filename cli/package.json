@@ -18,15 +18,16 @@
     "time-tracking",
     "developer-tools"
   ],
-  "author": "daudibrahimhasan",
   "repository": {
     "type": "git",
     "url": "https://github.com/daudibrahimhasan/gitChrono"
   },
   "license": "MIT",
+  "author": "Daud Ibrahim Hasan (@daudibrahimhasan)",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "dependencies": {
     "axios": "^1.6.0",
