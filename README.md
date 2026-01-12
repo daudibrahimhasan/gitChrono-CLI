@@ -8,7 +8,8 @@ It’s designed to be:
 - transparent in how it works
 - simple to refine, tweak, and extend
 
-> GitChrono provides **estimates**, not exact measurements. It’s built for insight, curiosity, and fun — not billing or tracking.
+> GitChrono provides **estimates**, not exact measurements.  
+> It’s built for insight, curiosity, and fun — **not** for billing or serious time tracking.
 
 ---
 
@@ -28,123 +29,133 @@ It’s designed to be:
 ### Clone and run locally
 
 ```bash
-
 git clone https://github.com/daudibrahimhasan/gitChrono.git
 cd gitChrono/cli
 npm install
 npm run build
 npm link
+```
 
-OR
+### Install from npm
 
-Directly install it from npm
+```bash
 npm install -g gitchrono
 ```
 
-### 🚀 Quick Start
+---
 
-1. **Create a GitHub Token**
+## 🚀 Quick Start
 
-Create a Personal Access Token with repo access:
+1. **Create a GitHub Personal Access Token**  
+   → https://github.com/settings/tokens  
+   (needs `repo` scope)
 
-https://github.com/settings/tokens
+2. **Run the analysis**
 
-2. Run the analysis
+   Using environment variable (recommended):
+   ```bash
+   export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   gitchrono analyze
+   ```
 
-Using an environment variable:
-export GITHUB_TOKEN=your_token_here
-gitchrono analyze
-Or pass the token directly:
-gitchrono analyze --token your_token_here
+   Or pass token directly:
+   ```bash
+   gitchrono analyze --token ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   ```
 
-**Example Output**
+**Example output:**
+
+```
 ████████████████████████████████████████ | 100% | 20/20 repos | my-project
 
-Jupyter Note 3322 hrs 48 mins ███████░░░░░░░░░░░░░ 36.75 %
-TypeScript 2965 hrs 2 mins ███████░░░░░░░░░░░░░ 32.79 %
-JavaScript 1552 hrs ███░░░░░░░░░░░░░░░░░ 17.17 %
-CSS 691 hrs 52 mins ██░░░░░░░░░░░░░░░░░░ 7.65 %
-Python 475 hrs 44 mins █░░░░░░░░░░░░░░░░░░░ 5.26 %
+Jupyter Notebook   3322 hrs 48 mins   ███████░░░░░░░░░░░░░  36.75 %
+TypeScript         2965 hrs  2 mins   ███████░░░░░░░░░░░░░  32.79 %
+JavaScript         1552 hrs           ███░░░░░░░░░░░░░░░░░  17.17 %
+CSS                691 hrs 52 mins    ██░░░░░░░░░░░░░░░░░░   7.65 %
+Python             475 hrs 44 mins    █░░░░░░░░░░░░░░░░░░░   5.26 %
 
 Total: 9041 hrs 26 mins across 20 repositories
 Lines of Code: 45,519
 
-generated with gitChrono built by @daudibrahimhasan
+generated with gitChrono • built by @daudibrahimhasan
+```
 
-CLI Options
-| Flag | Description |
-| ---------------------- | -------------------------------------- |
-| `--token <token>` | GitHub Personal Access Token |
-| `--user <username>` | Analyze a specific user's repositories |
-| `--include-forks` | Include forked repositories |
-| `--include-archived` | Include archived repositories |
-| `--top <n>` | Analyze top N most recent repositories |
-| `--output <format>` | `table`, `json`, or `markdown` |
-| `--readme` | Generate README-friendly markdown |
-| `--output-file <path>` | Save output to a file |
+---
 
-🧠 How It Works
+## CLI Options
 
-GitChrono intentionally keeps its logic simple and transparent:
+| Flag                    | Description                                  |
+|-------------------------|----------------------------------------------|
+| `--token <token>`       | GitHub Personal Access Token                 |
+| `--user <username>`     | Analyze a specific user's repositories       |
+| `--include-forks`       | Include forked repositories                  |
+| `--include-archived`    | Include archived repositories                |
+| `--top <n>`             | Analyze only the top N most recently updated repositories |
+| `--output <format>`     | `table`, `json`, or `markdown`               |
+| `--readme`              | Generate README-friendly markdown            |
+| `--output-file <path>`  | Save output to a file                        |
 
-Fetches repositories using the GitHub API
+---
 
-Retrieves language usage per repository
+## 🧠 How It Works
 
-Converts language byte counts into estimated lines of code
+GitChrono keeps the logic **simple and transparent**:
 
-Applies language complexity multipliers
+1. Fetches your repositories using the GitHub API
+2. Gets language byte counts per repository
+3. Converts bytes → estimated lines of code
+4. Applies language-specific **complexity multipliers**:
+   - C / C++ → ×2.0
+   - Python  → ×1.0
+   - HTML    → ×0.5
+   - … (and more — easy to change)
+5. Estimates time using ~30 weighted LOC per productive coding day
 
-C / C++ → 2.0×
+All multipliers and assumptions live in the source code — feel free to tweak them!
 
-Python → 1.0×
+---
 
-HTML → 0.5×
+## 📁 Project Structure
 
-Estimates time using an industry-average productivity model
-(~30 weighted LOC per day)
-
-All assumptions are easy to find and modify in the codebase.
-
-📁 Project Structure
-
+```
 cli/
 ├── src/
-│ ├── index.ts # CLI entry point
-│ ├── commands/
-│ │ ├── analyze.ts # Main analyze command
-│ │ └── auth.ts # Auth instructions
-│ ├── analysis.ts # LOC & time estimation logic
-│ ├── github.ts # GitHub API integration
-│ ├── cache.ts # Local caching
-│ └── config.ts # Token management
+│   ├── index.ts          # CLI entry point
+│   ├── commands/
+│   │   ├── analyze.ts    # Main analyze command
+│   │   └── auth.ts       # Token & auth helpers
+│   ├── analysis.ts       # LOC + time estimation logic
+│   ├── github.ts         # GitHub API client
+│   ├── cache.ts          # Local caching layer
+│   └── config.ts         # Token & config management
 ├── package.json
 └── tsconfig.json
+```
 
-🛠️ Customization & Contributions
+---
 
-GitChrono is built to be:
+## 🛠️ Customization & Contributions
 
-forked
+GitChrono is meant to be:
 
-tweaked
+- forked
+- tweaked
+- experimented with
 
-experimented with
+You can easily:
 
-Feel free to:
+- adjust language multipliers
+- try different time-estimation formulas
+- add new output formats
+- improve accuracy with commit timestamps, etc.
 
-adjust language multipliers
+Pull requests, ideas, and forks are very welcome!
 
-change time estimation models
+---
 
-add new output formats
-
-improve accuracy
-
-Pull requests and ideas are welcome.
-
-📄 License
+## 📄 License
 
 MIT © daudibrahimhasan
 
-<sub>generated with gitChrono · built by @daudibrahimhasan</sub>
+<sub>generated with gitChrono • built by @daudibrahimhasan</sub>
+```
