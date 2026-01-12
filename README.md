@@ -28,11 +28,17 @@ It’s designed to be:
 ### Clone and run locally
 
 ```bash
+
 git clone https://github.com/daudibrahimhasan/gitChrono.git
 cd gitChrono/cli
 npm install
 npm run build
 npm link
+
+OR
+
+Directly install it from npm
+npm install -g gitchrono
 ```
 
 ### 🚀 Quick Start
