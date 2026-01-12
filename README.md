@@ -155,7 +155,5 @@ Pull requests, ideas, and forks are very welcome!
 
 ## 📄 License
 
-MIT © daudibrahimhasan
-
-<sub>generated with gitChrono • built by @daudibrahimhasan</sub>
+MIT © [**@daudibrahimhasan**](https://github.com/daudibrahimhasan)
 ```
