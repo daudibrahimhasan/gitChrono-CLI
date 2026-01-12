@@ -23,6 +23,7 @@ export const BYTES_PER_LINE = {
     YAML: 30,
     JSON: 40,
     Markdown: 60,
+    "Jupyter Note": 250,
 };
 export const COMPLEXITY_MULTIPLIERS = {
     // Systems programming (complex)
@@ -53,6 +54,7 @@ export const COMPLEXITY_MULTIPLIERS = {
     JSON: 0.2,
     Shell: 0.7,
     Dockerfile: 0.5,
+    "Jupyter Note": 0.5,
 };
 export function calculateAnalysis(languageBytes, repoCount) {
     const languages = {};

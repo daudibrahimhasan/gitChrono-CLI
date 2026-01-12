@@ -63,3 +63,15 @@ export async function getRepoLanguages(token: string, owner: string, repo: strin
     return {};
   }
 }
+
+export async function getLatestCommit(token: string, owner: string, repo: string): Promise<string | null> {
+  try {
+    const response = await axios.get(`${GITHUB_API}/repos/${owner}/${repo}/commits`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { per_page: 1 },
+    });
+    return response.data[0]?.sha || null;
+  } catch {
+    return null;
+  }
+}

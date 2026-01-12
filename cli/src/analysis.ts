@@ -23,6 +23,7 @@ export const BYTES_PER_LINE: Record<string, number> = {
   YAML: 30,
   JSON: 40,
   Markdown: 60,
+  "Jupyter Note": 250,
 };
 
 export const COMPLEXITY_MULTIPLIERS: Record<string, number> = {
@@ -57,6 +58,7 @@ export const COMPLEXITY_MULTIPLIERS: Record<string, number> = {
   JSON: 0.2,
   Shell: 0.7,
   Dockerfile: 0.5,
+  "Jupyter Note": 0.5,
 };
 
 export interface LanguageStats {

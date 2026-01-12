@@ -16,3 +16,4 @@ export interface LanguageBytes {
 export declare function getAuthenticatedUser(token: string): Promise<string>;
 export declare function getUserRepos(token: string, username?: string): Promise<GithubRepo[]>;
 export declare function getRepoLanguages(token: string, owner: string, repo: string): Promise<LanguageBytes>;
+export declare function getLatestCommit(token: string, owner: string, repo: string): Promise<string | null>;

@@ -1,90 +1,144 @@
-# GitChrono CLI
+# ⏱️ GitChrono
 
-A command-line tool to analyze your GitHub repositories and calculate how much time you've spent coding.
+**GitChrono** is a lightweight CLI tool that estimates how much time you’ve spent coding by analyzing your GitHub repositories.
 
-## Installation
+It’s designed to be:
+
+- easy to run locally
+- transparent in how it works
+- simple to refine, tweak, and extend
+
+> GitChrono provides **estimates**, not exact measurements. It’s built for insight, curiosity, and fun — not billing or tracking.
+
+---
+
+## ✨ Features
+
+- 📊 Language-wise coding time breakdown
+- 🧮 Estimated total coding hours
+- 📁 Multi-repository analysis
+- 🚀 Fast CLI with progress indicators
+- 📝 Output as table, JSON, or Markdown
+- 📦 README-friendly report generation
+
+---
+
+## 📦 Installation
+
+### Clone and run locally
 
 ```bash
-npm install -g gitchrono
-```
-
-Or run locally:
-
-```bash
-cd cli
+git clone https://github.com/daudibrahimhasan/gitChrono.git
+cd gitChrono/cli
 npm install
 npm run build
 npm link
 ```
 
-## Usage
+### 🚀 Quick Start
 
-### 1. Get a GitHub Token
+1. **Create a GitHub Token**
 
-```bash
-gitchrono auth
-```
+Create a Personal Access Token with repo access:
 
-This will show you instructions to create a Personal Access Token.
+https://github.com/settings/tokens
 
-### 2. Analyze Your Repos
+2. Run the analysis
 
-```bash
-# Using environment variable
-export GITHUB_TOKEN=your_token
+Using an environment variable:
+export GITHUB_TOKEN=your_token_here
 gitchrono analyze
+Or pass the token directly:
+gitchrono analyze --token your_token_here
 
-# Or pass token directly
-gitchrono analyze --token your_token
+**Example Output**
+████████████████████████████████████████ | 100% | 20/20 repos | my-project
 
-# Analyze specific user
-gitchrono analyze --user octocat
+Jupyter Note 3322 hrs 48 mins ███████░░░░░░░░░░░░░ 36.75 %
+TypeScript 2965 hrs 2 mins ███████░░░░░░░░░░░░░ 32.79 %
+JavaScript 1552 hrs ███░░░░░░░░░░░░░░░░░ 17.17 %
+CSS 691 hrs 52 mins ██░░░░░░░░░░░░░░░░░░ 7.65 %
+Python 475 hrs 44 mins █░░░░░░░░░░░░░░░░░░░ 5.26 %
 
-# Include forks and archived repos
-gitchrono analyze --include-forks --include-archived
+Total: 9041 hrs 26 mins across 20 repositories
+Lines of Code: 45,519
 
-# Only analyze top 50 most recently active repos
-gitchrono analyze --top 50
+generated with gitChrono built by @daudibrahimhasan
 
-# Output as markdown (for README)
-gitchrono analyze --output markdown
+CLI Options
+| Flag | Description |
+| ---------------------- | -------------------------------------- |
+| `--token <token>` | GitHub Personal Access Token |
+| `--user <username>` | Analyze a specific user's repositories |
+| `--include-forks` | Include forked repositories |
+| `--include-archived` | Include archived repositories |
+| `--top <n>` | Analyze top N most recent repositories |
+| `--output <format>` | `table`, `json`, or `markdown` |
+| `--readme` | Generate README-friendly markdown |
+| `--output-file <path>` | Save output to a file |
 
-# Output as JSON (for scripting)
-gitchrono analyze --output json
-```
+🧠 How It Works
 
-## Example Output
+GitChrono intentionally keeps its logic simple and transparent:
 
-```
-╔════════════════════════════════════════════════════════════════════╗
-║                    📊 GitChrono Analysis                          ║
-╚════════════════════════════════════════════════════════════════════╝
+Fetches repositories using the GitHub API
 
-  Analyzed 47 repositories for @username
+Retrieves language usage per repository
 
-  Python         250 hrs 34 mins  █████████████████████████  56.0%
-  JavaScript      92 hrs 20 mins  █████████░░░░░░░░░░░░░░░░  14.0%
-  TypeScript      65 hrs 40 mins  ██████░░░░░░░░░░░░░░░░░░░  11.5%
-  HTML/CSS        45 hrs 50 mins  █████░░░░░░░░░░░░░░░░░░░░   8.2%
-  SQL             22 hrs 15 mins  ███░░░░░░░░░░░░░░░░░░░░░░   4.0%
+Converts language byte counts into estimated lines of code
 
-─────────────────────────────────────────────────────────────────────
+Applies language complexity multipliers
 
-  📈 Summary
-     Total Time:      475 hrs 39 mins
-     Lines of Code:   127,450 LOC
-     Repositories:    47
-     Top Language:    Python
-```
+C / C++ → 2.0×
 
-## How It Works
+Python → 1.0×
 
-1. **Fetches** all your repositories (or a specific user's)
-2. **Analyzes** language breakdown for each repo using GitHub's API
-3. **Converts** bytes to lines of code using language-specific ratios
-4. **Applies** complexity multipliers (e.g., C++ is harder than HTML)
-5. **Calculates** time estimates based on industry averages (~30 weighted LOC/day)
+HTML → 0.5×
 
-## License
+Estimates time using an industry-average productivity model
+(~30 weighted LOC per day)
 
-MIT
+All assumptions are easy to find and modify in the codebase.
+
+📁 Project Structure
+
+cli/
+├── src/
+│ ├── index.ts # CLI entry point
+│ ├── commands/
+│ │ ├── analyze.ts # Main analyze command
+│ │ └── auth.ts # Auth instructions
+│ ├── analysis.ts # LOC & time estimation logic
+│ ├── github.ts # GitHub API integration
+│ ├── cache.ts # Local caching
+│ └── config.ts # Token management
+├── package.json
+└── tsconfig.json
+
+🛠️ Customization & Contributions
+
+GitChrono is built to be:
+
+forked
+
+tweaked
+
+experimented with
+
+Feel free to:
+
+adjust language multipliers
+
+change time estimation models
+
+add new output formats
+
+improve accuracy
+
+Pull requests and ideas are welcome.
+
+📄 License
+
+MIT © daudibrahimhasan
+
+<sub>generated with gitChrono · built by @daudibrahimhasan</sub>

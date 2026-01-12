@@ -1,10 +1,12 @@
 import chalk from "chalk";
 import ora from "ora";
 import cliProgress from "cli-progress";
-import { getAuthenticatedUser, getUserRepos, getRepoLanguages } from "../github.js";
+import { getAuthenticatedUser, getUserRepos, getRepoLanguages, getLatestCommit } from "../github.js";
 import { calculateAnalysis, formatTime, generateASCIIBar } from "../analysis.js";
+import { ensureToken } from "../config.js";
+import { getCachedLanguageData, cacheLanguageData } from "../cache.js";
 export async function analyze(options) {
-    const token = options.token || process.env.GITHUB_TOKEN;
+    const token = await ensureToken(options.token);
     if (!token) {
         console.log(chalk.red("\n❌ No GitHub token provided!\n"));
         console.log("Run " + chalk.cyan("gitchrono auth") + " for instructions.\n");
@@ -14,11 +16,34 @@ export async function analyze(options) {
     try {
         // Get authenticated user if no username specified
         spinner.start("Connecting to GitHub...");
-        const username = options.user || await getAuthenticatedUser(token);
+        let username;
+        try {
+            username = options.user || await getAuthenticatedUser(token);
+        }
+        catch (e) {
+            spinner.fail(chalk.red("Failed to connect to GitHub. Please check your token."));
+            const error = e;
+            if (error.response?.status === 401) {
+                console.log(chalk.yellow("\nYour token is invalid or expired."));
+            }
+            else {
+                console.log(chalk.dim(`Detail: ${error.message || "Unknown error"}`));
+            }
+            process.exit(1);
+        }
         spinner.succeed(chalk.green(`Connected as ${chalk.bold(username)}`));
         // Fetch repositories
         spinner.start("Fetching repositories...");
-        let repos = await getUserRepos(token, options.user);
+        let repos;
+        try {
+            repos = await getUserRepos(token, options.user);
+        }
+        catch (e) {
+            spinner.fail(chalk.red("Failed to fetch repositories."));
+            const error = e;
+            console.log(chalk.dim(`Detail: ${error.message || "Unknown error"}`));
+            process.exit(1);
+        }
         spinner.succeed(chalk.green(`Found ${chalk.bold(repos.length)} repositories`));
         // Apply filters
         const originalCount = repos.length;
@@ -57,14 +82,37 @@ export async function analyze(options) {
         for (let i = 0; i < repos.length; i += batchSize) {
             const batch = repos.slice(i, i + batchSize);
             const batchResults = await Promise.all(batch.map(async (repo) => {
-                const languages = await getRepoLanguages(token, repo.owner.login, repo.name);
-                processedCount++;
-                progressBar.update(processedCount, { repo: repo.name.substring(0, 30) });
-                return languages;
+                try {
+                    // Check cache
+                    const commitSha = await getLatestCommit(token, repo.owner.login, repo.name);
+                    if (commitSha) {
+                        const cached = getCachedLanguageData(repo.full_name, commitSha);
+                        if (cached) {
+                            processedCount++;
+                            progressBar.update(processedCount, { repo: repo.name.substring(0, 30) });
+                            return cached;
+                        }
+                    }
+                    // Fetch fresh data
+                    const languages = await getRepoLanguages(token, repo.owner.login, repo.name);
+                    // Save to cache
+                    if (commitSha && Object.keys(languages).length > 0) {
+                        cacheLanguageData(repo.full_name, commitSha, languages);
+                    }
+                    processedCount++;
+                    progressBar.update(processedCount, { repo: repo.name.substring(0, 30) });
+                    return languages;
+                }
+                catch {
+                    processedCount++;
+                    progressBar.update(processedCount, { repo: `(error) ${repo.name.substring(0, 20)}` });
+                    return {};
+                }
             }));
             // Aggregate results
             for (const languages of batchResults) {
-                for (const [lang, bytes] of Object.entries(languages)) {
+                for (const [originalLang, bytes] of Object.entries(languages)) {
+                    const lang = originalLang === "Jupyter Notebook" ? "Jupyter Note" : originalLang;
                     aggregatedLanguages[lang] = (aggregatedLanguages[lang] || 0) + bytes;
                 }
             }
@@ -74,62 +122,89 @@ export async function analyze(options) {
         const result = calculateAnalysis(aggregatedLanguages, repos.length);
         // Output results
         console.log("");
-        outputResults(result, options.output, username);
+        outputResults(result, options.output, username, options.readme, options.outputFile);
     }
     catch (error) {
-        spinner.fail(chalk.red("Error: " + error.message));
-        if (error.response?.status === 401) {
-            console.log(chalk.yellow("\nYour token might be invalid or expired."));
-            console.log("Run " + chalk.cyan("gitchrono auth") + " for instructions.\n");
-        }
+        if (spinner.isSpinning)
+            spinner.fail(chalk.red("An unexpected error occurred."));
+        const err = error;
+        console.error(chalk.red("\n❌ Error: " + (err.message || "Unknown error")));
         process.exit(1);
     }
 }
-function outputResults(result, format, username) {
+function outputResults(result, format, username, isReadme, outputFile) {
     const sortedLanguages = Object.entries(result.languages)
         .sort((a, b) => b[1].hours - a[1].hours);
+    let output = "";
     if (format === "json") {
-        console.log(JSON.stringify(result, null, 2));
-        return;
+        output = JSON.stringify(result, null, 2);
     }
-    if (format === "markdown") {
-        outputMarkdown(result, sortedLanguages, username);
-        return;
+    else if (format === "markdown") {
+        output = generateMarkdown(result, sortedLanguages, username, isReadme);
     }
-    // Default: table format - clean aligned output
-    console.log("\n");
-    // Language breakdown - clean aligned format
+    else {
+        // Table format
+        output += "\n";
+        for (const [lang, stats] of sortedLanguages.slice(0, 15)) {
+            const bar = generateASCIIBar(stats.percentage, 20);
+            const langName = lang.length > 12 ? lang.substring(0, 11) + "." : lang.padEnd(12);
+            const time = formatTime(stats.hours).padStart(18);
+            const pct = stats.percentage.toFixed(2).padStart(8) + " %";
+            output += `${langName.padEnd(12)}${time}    ${bar}    ${pct}\n`;
+        }
+        if (sortedLanguages.length > 15) {
+            const othersHours = sortedLanguages.slice(15).reduce((sum, [, s]) => sum + s.hours, 0);
+            const othersPct = sortedLanguages.slice(15).reduce((sum, [, s]) => sum + s.percentage, 0);
+            const bar = generateASCIIBar(othersPct, 20);
+            output += `${"Others".padEnd(14)}${formatTime(othersHours).padStart(18)}    ${bar}    ${othersPct.toFixed(2).padStart(8)} %\n`;
+        }
+        output += `\nTotal: ${formatTime(result.totalHours)} across ${result.repoCount} repositories\n`;
+        output += `Lines of Code: ${result.totalLoc.toLocaleString()}\n`;
+        output += `\ngenerated with ${chalk.hex("#A78BFA")("gitChrono")} built by @daudibrahimhasan\n`;
+    }
+    if (outputFile) {
+        import("fs").then((fs) => {
+            import("path").then((path) => {
+                const dir = path.dirname(outputFile);
+                if (!fs.existsSync(dir)) {
+                    fs.mkdirSync(dir, { recursive: true });
+                }
+                fs.writeFileSync(outputFile, output.trim() + "\n");
+                console.log(chalk.green(`\n✅ Results saved to ${chalk.bold(outputFile)}\n`));
+            });
+        });
+    }
+    else {
+        console.log(output);
+    }
+}
+function generateMarkdown(result, sortedLanguages, username, isReadme) {
+    let md = "";
+    if (isReadme) {
+        md += `## 💻 Time Spent Coding\n\n`;
+        md += "```\n";
+    }
+    else {
+        md += `# 📊 Time Spent on Code\n\n`;
+        md += "```\n";
+    }
     for (const [lang, stats] of sortedLanguages.slice(0, 15)) {
         const bar = generateASCIIBar(stats.percentage, 20);
-        const langName = lang.length > 12 ? lang.substring(0, 11) + "." : lang.padEnd(12);
+        const langName = lang.padEnd(14);
         const time = formatTime(stats.hours).padStart(18);
         const pct = stats.percentage.toFixed(2).padStart(8) + " %";
-        console.log(`${langName.padEnd(12)}${time}    ${bar}    ${pct}`);
+        md += `${langName} ${time}    ${bar}    ${pct}\n`;
     }
-    if (sortedLanguages.length > 15) {
-        const othersHours = sortedLanguages.slice(15).reduce((sum, [, s]) => sum + s.hours, 0);
-        const othersPct = sortedLanguages.slice(15).reduce((sum, [, s]) => sum + s.percentage, 0);
-        const bar = generateASCIIBar(othersPct, 20);
-        console.log(`${"Others".padEnd(14)}${formatTime(othersHours).padStart(18)}    ${bar}    ${othersPct.toFixed(2).padStart(8)} %`);
+    md += "```\n\n";
+    if (isReadme) {
+        md += `Total: ${formatTime(result.totalHours)} across ${result.repoCount} repositories  \n`;
+        md += `Lines of Code: ${result.totalLoc.toLocaleString()}\n`;
     }
-    // Summary
-    console.log("\n");
-    console.log(`Total: ${formatTime(result.totalHours)} across ${result.repoCount} repositories`);
-    console.log(`Lines of Code: ${result.totalLoc.toLocaleString()}`);
-    console.log("");
-}
-function outputMarkdown(result, sortedLanguages, username) {
-    console.log(`# 📊 Time Spent on Code\n`);
-    console.log(`> Generated by [GitChrono](https://github.com/yourusername/gitchrono) for @${username}\n`);
-    console.log("```");
-    for (const [lang, stats] of sortedLanguages.slice(0, 12)) {
-        const bar = generateASCIIBar(stats.percentage, 20);
-        const langName = lang.padEnd(12);
-        const time = formatTime(stats.hours).padStart(15);
-        const pct = stats.percentage.toFixed(2).padStart(6) + " %";
-        console.log(`${langName} ${time}  ${bar}  ${pct}`);
+    else {
+        md += `Total: ${formatTime(result.totalHours)} across ${result.repoCount} repositories  \n`;
+        md += `Lines of Code: ${result.totalLoc.toLocaleString()}  \n`;
+        md += `Last updated: ${new Date().toLocaleDateString()}\n\n`;
+        md += `> Generated by [GitChrono](https://github.com/daudibrahimhasan/gitChrono) for @${username}`;
     }
-    console.log("```\n");
-    console.log(`**Total:** ${formatTime(result.totalHours)} across ${result.repoCount} repositories  `);
-    console.log(`**Last updated:** ${new Date().toLocaleDateString()}`);
+    return md;
 }
