@@ -158,7 +158,3 @@ Pull requests, ideas, and forks are very welcome!
 ## 📄 License
 
 MIT © [**@daudibrahimhasan**](https://github.com/daudibrahimhasan)
-
-```
-
-```
